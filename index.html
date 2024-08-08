@@ -20,6 +20,7 @@
     let isClicked = false;
     let isSparked = false;
     let Sparking_time = 0;
+    const fade_time = 4;
 
     await PIXI.Assets.load('src/fling_L.png')
     let flingSprite_L = PIXI.Sprite.from('src/fling_L.png');
@@ -55,25 +56,31 @@
     click_area.cursor = 'pointer';
     app.stage.addChild(click_area);
 
-    const spark_origin = [app.screen.width / 2 - 50,app.screen.height / 2 - 280];
+    const spark_origin = [app.screen.width / 2  -48,app.screen.height / 2 -280];
     const sparkRvs = [[74.026,134.426],[70.114,131.111],[169.223,50.535],[145.148,22.203]];    
     const sparkMvs = [[62.792,131.613],[58.278,131.513],[66.904,0],[49.952,4.822]];    
     const sparkLvs = [[44.936,128.398],[43.833,130.910],[7.820,83.118],[0.598,100.870]];    
     
 
 
+    function calc_kt(vs){
+        return(math.multiply(math.inv(math.transpose([math.subtract(vs[2],vs[0]),math.subtract(vs[3],vs[1])])),math.subtract(vs[1],vs[0])));
+    }
+
     function calc_origin(vs){
-        console.log([math.subtract(vs[2],vs[0]),math.subtract(vs[1],vs[3])])
-        return(math.multiply(math.inv(math.transpose([math.subtract(vs[2],vs[0]),math.subtract(vs[1],vs[3])])),math.subtract(vs[1],vs[0])));
+        return(math.add(vs[0],math.multiply(calc_kt(vs)[0],math.subtract(vs[2],vs[0]))))
     }
 
     function localvec(vs,i){
         return(math.subtract(vs[i],calc_origin(vs)));
     }
 
+    function calc_place(vs,t,type){
+        return(math.add(math.multiply(localvec(vs,type),t),calc_origin(vs)));
+    }
+
     function calc_places(vs,t){
-        console.log([localvec(vs,0)[0],localvec(vs,0)[1],localvec(vs,2)[0],localvec(vs,2)[1],localvec(vs,3)[0],localvec(vs,3)[1],localvec(vs,1)[0],localvec(vs,1)[1]])
-        return([localvec(vs,0)[0]*t,localvec(vs,0)[1]*t,localvec(vs,2)[0]*t,localvec(vs,2)[1]*t,localvec(vs,3)[0]*t,localvec(vs,3)[1]*t,localvec(vs,1)[0]*t,localvec(vs,1)[1]*t]);
+        return([calc_place(vs,t,0)[0],calc_place(vs,t,0)[1],calc_place(vs,t,2)[0],calc_place(vs,t,2)[1],calc_place(vs,t,3)[0],calc_place(vs,t,3)[1],calc_place(vs,t,1)[0],calc_place(vs,t,1)[1]]);
     }
 
     const spark_offset = Math.max(math.norm(localvec(sparkRvs,0)),math.norm(localvec(sparkRvs,1)),math.norm(localvec(sparkRvs,2)),math.norm(localvec(sparkRvs,3)),math.norm(localvec(sparkMvs,0)),math.norm(localvec(sparkMvs,1)),math.norm(localvec(sparkMvs,2)),math.norm(localvec(sparkMvs,3)),math.norm(localvec(sparkLvs,0)),math.norm(localvec(sparkLvs,1)),math.norm(localvec(sparkLvs,2)),math.norm(localvec(sparkLvs,3)))
@@ -84,21 +91,25 @@
 
     const spark_L = new PIXI.Graphics();
 
+    function fading(t,T){
+        return(1-t/T);
+    }
+
     function depict(t){
         spark_R.clear()
         spark_R.poly(calc_places(sparkRvs,t));
         spark_R.position.set(spark_origin[0],spark_origin[1]);
-        spark_R.fill(0xff0022);
+        spark_R.fill(0xff0022,fading(t,fade_time));
         app.stage.addChild(spark_R);
         spark_M.clear()
         spark_M.poly(calc_places(sparkMvs,t));
         spark_M.position.set(spark_origin[0],spark_origin[1]);
-        spark_M.fill(0x00A8db);
+        spark_M.fill(0x00A8db,fading(t,fade_time));
         app.stage.addChild(spark_M);
         spark_L.clear()
         spark_L.poly(calc_places(sparkLvs,t));
         spark_L.position.set(spark_origin[0],spark_origin[1]);
-        spark_L.fill(0x00a8db);
+        spark_L.fill(0x00a8db,fading(t,fade_time));
         app.stage.addChild(spark_L);
     }
 
@@ -122,7 +133,7 @@
         if(isSparked){
             depict(Sparking_time);
             Sparking_time += time.deltaTime;
-            if(Sparking_time >= 5){
+            if(Sparking_time >= fade_time){
                 depict(0);
                 Sparking_time = 0;
                 isSparked = false;
