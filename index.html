@@ -44,12 +44,12 @@
         const fire_seg = new PIXI.Graphics();
         const fire_x = app.screen.width*Math.random();
         const fire_y = rnorm(h,5000);
-        fire_seg.poly([fire_x,app.screen.height,rnorm(fire_x,500),app.screen.height-fire_y*Math.random(),rnorm(fire_x,500),app.screen.height-fire_y]).fill(0xff0000,0.7);
+        fire_seg.poly([fire_x,app.screen.height+200,rnorm(fire_x,0.015)+150*(Math.round(Math.random())-0.5),app.screen.height-0.7*fire_y*Math.random(),rnorm(fire_x,0.1)+100*(Math.round(Math.random())-0.5),app.screen.height-fire_y]).fill({h:1+44*Math.random(),s:100,l:55+10*Math.random(),a:0.7});
         app.stage.addChild(fire_seg);
     }
 
-    for(let i = 0; i<500; i++){
-        fire_depict(300);
+    for(let i = 0; i<120; i++){
+        fire_depict(250);
     }
 
     const click_area = new PIXI.Graphics();
