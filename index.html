@@ -20,7 +20,7 @@
     let isClicked = false;
     let isSparked = false;
     let Sparking_time = 0;
-    const fade_time = 4;
+    const fade_time = 2;
 
     await PIXI.Assets.load('src/fling_L.png')
     let flingSprite_L = PIXI.Sprite.from('src/fling_L.png');
@@ -92,7 +92,7 @@
     const spark_L = new PIXI.Graphics();
 
     function fading(t,T){
-        return(1-t/T);
+        return((t**2)*Math.exp(1-t**2));
     }
 
     function depict(t){
@@ -132,7 +132,7 @@
         }
         if(isSparked){
             depict(Sparking_time);
-            Sparking_time += time.deltaTime;
+            Sparking_time += time.deltaTime*0.3;
             if(Sparking_time >= fade_time){
                 depict(0);
                 Sparking_time = 0;
