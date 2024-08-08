@@ -22,13 +22,16 @@
     let Sparking_time = 0;
     const fade_time = 2;
 
+
+    
+
     await PIXI.Assets.load('src/fling_L.png')
     let flingSprite_L = PIXI.Sprite.from('src/fling_L.png');
     flingSprite_L.anchor.set(0.9,1);
     flingSprite_L.x = app.screen.width / 2;
     flingSprite_L.y = app.screen.height / 2;
     flingSprite_L.scale = 0.5
-    app.stage.addChild(flingSprite_L);
+    
 
     await PIXI.Assets.load('src/fling_R.png')
     let flingSprite_R = PIXI.Sprite.from('src/fling_R.png');
@@ -36,8 +39,7 @@
     flingSprite_R.x = app.screen.width / 2;
     flingSprite_R.y = app.screen.height / 2;
     flingSprite_R.scale = 0.5
-    app.stage.addChild(flingSprite_R);
-
+    
     
 
     function fire_depict(h){
@@ -51,6 +53,10 @@
     for(let i = 0; i<Math.round(app.screen.width*0.08); i++){
         fire_depict(250);
     }
+    app.stage.addChild(flingSprite_L);
+    app.stage.addChild(flingSprite_R);
+
+
 
     const click_area = new PIXI.Graphics();
    
