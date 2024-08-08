@@ -52,6 +52,7 @@
 
     click_area.on('pointerdown',(event)=>{isHovered = true;});
     click_area.on('pointerup',(event)=>{isClicked = true;});
+    click_area.on('pointerleave',(event)=>{isClicked = true;});
     click_area.eventMode = 'static';
     click_area.cursor = 'pointer';
     app.stage.addChild(click_area);
