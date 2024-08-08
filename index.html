@@ -51,6 +51,7 @@
     click_area.y = app.screen.height / 2;
 
     click_area.on('pointerdown',(event)=>{isHovered = true;});
+    click_area.on('pointerenter',(event)=>{isHovered = true;});
     click_area.on('pointerup',(event)=>{isClicked = true;});
     click_area.on('pointerleave',(event)=>{isClicked = true;});
     click_area.eventMode = 'static';
@@ -120,7 +121,7 @@
             flingSprite_L.rotation -= 0.2 * time.deltaTime;
             flingSprite_R.rotation += 0.2 * time.deltaTime;
         }
-        if (isClicked){
+        if (isClicked & isHovered){
             flingSprite_L.rotation += 0.5 * time.deltaTime;
             flingSprite_R.rotation -= 0.5 * time.deltaTime;
             if(flingSprite_R.rotation <= 0){
