@@ -63,7 +63,7 @@
         fire_gfs.forEach(function(fire_seg,i){
             fire_seg.clear();
             const fire_color = chroma.temperature(9*fire_pos[i][1][1][1])
-            fire_seg.poly(calc_fire_pos(fire_pos[i],fire_pos[i][2]+0.01*noise.perlin2(fire_pos[i][1][1][0],t/100),scale,t)).fill(math.divide(fire_color.rgb(),255).concat(1-fire_color.get("hsl.l")));
+            fire_seg.poly(calc_fire_pos(fire_pos[i],fire_pos[i][2]+0.1*noise.perlin2(fire_pos[i][1][1][0],t/50),scale,t)).fill(math.divide(fire_color.rgb(),255).concat(1-fire_color.get("hsl.l")));
             app.stage.addChild(fire_seg);
         });   
     }
