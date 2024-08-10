@@ -24,6 +24,7 @@
     const fade_time = 2;
     const fire_dencity = 0.05;
     const fire_offset = 0;
+    let fire_scale = 1;
 
     console.log(chroma.temperature(9000).get("rgb"));
     
@@ -52,20 +53,22 @@
         fire_positions.push([[fire_x,app.screen.height+fire_offset],[[240*(Math.round(Math.random())-0.5),0.3+0.5*fire_y*Math.random()],[0,fire_y]],0.5*(Math.random()-0.5)]);
     }
 
-    fire_depict(fire_graphics,fire_positions);
+    fire_depict(fire_graphics,fire_positions,fire_scale);
 
-    function fire_depict(fire_gfs,fire_pos){
+    function fire_depict(fire_gfs,fire_pos,scale){
         fire_gfs.forEach(function(fire_seg,i){
             fire_seg.clear();
             const fire_color = chroma.temperature(9*fire_pos[i][1][1][1])
-            fire_seg.poly(calc_fire_pos(fire_pos[i],fire_pos[i][2])).fill(math.divide(fire_color.rgb(),255).concat(1-fire_color.get("hsl.l")));
+            fire_seg.poly(calc_fire_pos(fire_pos[i],fire_pos[i][2],scale)).fill(math.divide(fire_color.rgb(),255).concat(1-fire_color.get("hsl.l")));
             app.stage.addChild(fire_seg);
         });   
     }
 
-    function calc_fire_pos(pos,theta){
+    function calc_fire_pos(pos,theta,scale){
         const v_o = pos[0];
-        const M = math.transpose(pos[1]);
+        let M_raw = pos[1];
+        M_raw[1][1] *= scale;
+        const M = math.transpose(M_raw);
         const M_r = [[Math.cos(theta),-1*Math.sin(theta)],[Math.sin(theta),Math.cos(theta)]];
         const v_out = math.subtract(v_o,math.transpose(math.multiply(M_r,M)));
         return(v_o.concat(v_out.flat(Infinity)));
@@ -161,6 +164,7 @@
         if (isClicked){
             flingSprite_L.rotation += 0.5 * time.deltaTime;
             flingSprite_R.rotation -= 0.5 * time.deltaTime;
+            
             if(flingSprite_R.rotation <= 0){
                 flingSprite_L.rotation =0;
                 flingSprite_R.rotation =0;
@@ -177,7 +181,11 @@
                 Sparking_time = 0;
                 isSparked = false;
             }
+            fire_scale += 0.0001*time.deltaTime;
+            console.log("sparking")
         }
+
+        fire_depict(fire_graphics,fire_positions,fire_scale);
     });
     
     function rnorm(m,s){
