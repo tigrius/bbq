@@ -14,8 +14,11 @@
         let height = window.innerHeight;
         app.renderer.resize(width,height)
     }
-
-    window.addEventListener("load",screenResize);
+    if (document.readyState ==="complete"){
+        screenResize();
+    }else{
+        window.addEventListener("load",screenResize);
+    }
     window.addEventListener("resize",screenResize);
     
     const noise = new Noise(1);
@@ -26,7 +29,7 @@
     let Sparking_time = 0;
     const fade_time = 2;
     const fire_dencity = 0.05;
-    const fire_offset = 50;
+    const fire_offset = 0;
     let fire_scale =1;
 
     console.log(chroma.temperature(9000).get("rgb"));
