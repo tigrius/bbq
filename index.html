@@ -56,16 +56,16 @@
 
     fire_depict(fire_graphics,fire_positions,fire_scale);
 
-    function fire_depict(fire_gfs,fire_pos,scale){
+    function fire_depict(fire_gfs,fire_pos,scale,t){
         fire_gfs.forEach(function(fire_seg,i){
             fire_seg.clear();
             const fire_color = chroma.temperature(9*fire_pos[i][1][1][1])
-            fire_seg.poly(calc_fire_pos(fire_pos[i],fire_pos[i][2],scale)).fill(math.divide(fire_color.rgb(),255).concat(1-fire_color.get("hsl.l")));
+            fire_seg.poly(calc_fire_pos(fire_pos[i],fire_pos[i][2],scale,t)).fill(math.divide(fire_color.rgb(),255).concat(1-fire_color.get("hsl.l")));
             app.stage.addChild(fire_seg);
         });   
     }
 
-    function calc_fire_pos(pos,theta,scale){
+    function calc_fire_pos(pos,theta,scale,t){
         const v_o = pos[0];
         let M_raw = pos[1];
         M_raw[1][1] *= scale;
@@ -150,13 +150,13 @@
         app.stage.addChild(spark_L);
     }
 
-   
+    let fire_time = 0;
     app.ticker.add((time)=>
     {
         /*for (let fire_seg of fire_segs){
         fire_depict(250,fire_seg);
         }*/
-
+        
 
         if (isHovered & !isClicked & flingSprite_R.rotation < 3.14/6){
             flingSprite_L.rotation -= 0.2 * time.deltaTime;
@@ -186,7 +186,8 @@
             console.log("sparking")
         }
 
-        fire_depict(fire_graphics,fire_positions,fire_scale);
+        fire_depict(fire_graphics,fire_positions,fire_scale,fire_time);
+        fire_time += time.deltaTime;
     });
     
     function rnorm(m,s){
