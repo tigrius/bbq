@@ -54,13 +54,13 @@
         fire_positions.push([[fire_x,app.screen.height+fire_offset],[[240*(Math.round(Math.random())-0.5),0.3+0.5*fire_y*Math.random()],[0,fire_y]],0.5*(Math.random()-0.5)]);
     }
 
-    fire_depict(fire_graphics,fire_positions,fire_scale);
+    fire_depict(fire_graphics,fire_positions,fire_scale,0);
 
     function fire_depict(fire_gfs,fire_pos,scale,t){
         fire_gfs.forEach(function(fire_seg,i){
             fire_seg.clear();
             const fire_color = chroma.temperature(9*fire_pos[i][1][1][1])
-            fire_seg.poly(calc_fire_pos(fire_pos[i],fire_pos[i][2],scale,t)).fill(math.divide(fire_color.rgb(),255).concat(1-fire_color.get("hsl.l")));
+            fire_seg.poly(calc_fire_pos(fire_pos[i],fire_pos[i][2]+perlin.get(fire_pos[i][1][1][0],t)-0.5,scale,t)).fill(math.divide(fire_color.rgb(),255).concat(1-fire_color.get("hsl.l")));
             app.stage.addChild(fire_seg);
         });   
     }
