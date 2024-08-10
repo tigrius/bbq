@@ -3,6 +3,7 @@
 <div id = "app"></div>
 <script src="https://pixijs.download/release/pixi.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/13.0.3/math.js" integrity="sha512-lAVGwhTndbBUjJlN0Lq4BNuOP0lpuGA9OUCA9bxRZrsehpmkiv8BcYdp91ON3XqJHWmVURGTw1d1W3LCr1k/1g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chroma-js/2.4.2/chroma.min.js"></script>
 <script type = "module">
     const app = new PIXI.Application();
     await app.init({width: 600,height: 600,backgroundColor:0});
@@ -21,8 +22,10 @@
     let isSparked = false;
     let Sparking_time = 0;
     const fade_time = 2;
+    const fire_dencity = 0.05;
+    const fire_offset = 0;
 
-
+    console.log(chroma.temperature(9000).get("rgb"));
     
 
     await PIXI.Assets.load('src/fling_L.png')
@@ -32,7 +35,6 @@
     flingSprite_L.y = app.screen.height / 2;
     flingSprite_L.scale = 0.5
     
-
     await PIXI.Assets.load('src/fling_R.png')
     let flingSprite_R = PIXI.Sprite.from('src/fling_R.png');
     flingSprite_R.anchor.set(0.1,1);
@@ -40,19 +42,35 @@
     flingSprite_R.y = app.screen.height / 2;
     flingSprite_R.scale = 0.5
     
-    
 
-    function fire_depict(h){
-        const fire_seg = new PIXI.Graphics();
+    let fire_graphics = [];
+    let fire_positions = [];
+    for(let i = 0; i < Math.round(app.screen.width*fire_dencity); i++){
+        fire_graphics.push(new PIXI.Graphics());
         const fire_x = app.screen.width*Math.random();
-        const fire_y = rnorm(h,5000);
-        fire_seg.poly([fire_x,app.screen.height+200,rnorm(fire_x,0.015)+150*(Math.round(Math.random())-0.5),app.screen.height-0.7*fire_y*Math.random(),rnorm(fire_x,0.1)+100*(Math.round(Math.random())-0.5),app.screen.height-fire_y]).fill({h:1+44*Math.random(),s:100,l:55+10*Math.random(),a:0.7});
-        app.stage.addChild(fire_seg);
+        const fire_y = rnorm(250,5000);
+        fire_positions.push([[fire_x,app.screen.height+fire_offset],[[240*(Math.round(Math.random())-0.5),0.3+0.5*fire_y*Math.random()],[0,fire_y]],0.5*(Math.random()-0.5)]);
     }
 
-    for(let i = 0; i<Math.round(app.screen.width*0.08); i++){
-        fire_depict(250);
+    fire_depict(fire_graphics,fire_positions);
+
+    function fire_depict(fire_gfs,fire_pos){
+        fire_gfs.forEach(function(fire_seg,i){
+            fire_seg.clear();
+            const fire_color = chroma.temperature(9*fire_pos[i][1][1][1])
+            fire_seg.poly(calc_fire_pos(fire_pos[i],fire_pos[i][2])).fill(math.divide(fire_color.rgb(),255).concat(1-fire_color.get("hsl.l")));
+            app.stage.addChild(fire_seg);
+        });   
     }
+
+    function calc_fire_pos(pos,theta){
+        const v_o = pos[0];
+        const M = math.transpose(pos[1]);
+        const M_r = [[Math.cos(theta),-1*Math.sin(theta)],[Math.sin(theta),Math.cos(theta)]];
+        const v_out = math.subtract(v_o,math.transpose(math.multiply(M_r,M)));
+        return(v_o.concat(v_out.flat(Infinity)));
+    }
+
     app.stage.addChild(flingSprite_L);
     app.stage.addChild(flingSprite_R);
 
@@ -110,7 +128,7 @@
         return((t**2)*Math.exp(1-t**2));
     }
 
-    function depict(t){
+    function spark_depict(t){
         spark_R.clear()
         spark_R.poly(calc_places(sparkRvs,t));
         spark_R.position.set(spark_origin[0],spark_origin[1]);
@@ -131,6 +149,11 @@
    
     app.ticker.add((time)=>
     {
+        /*for (let fire_seg of fire_segs){
+        fire_depict(250,fire_seg);
+        }*/
+
+
         if (isHovered & !isClicked & flingSprite_R.rotation < 3.14/6){
             flingSprite_L.rotation -= 0.2 * time.deltaTime;
             flingSprite_R.rotation += 0.2 * time.deltaTime;
@@ -147,10 +170,10 @@
             }
         }
         if(isSparked){
-            depict(Sparking_time);
+            spark_depict(Sparking_time);
             Sparking_time += time.deltaTime*0.3;
             if(Sparking_time >= fade_time){
-                depict(0);
+                spark_depict(0);
                 Sparking_time = 0;
                 isSparked = false;
             }
