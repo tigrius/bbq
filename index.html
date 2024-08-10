@@ -5,7 +5,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/13.0.3/math.js" integrity="sha512-lAVGwhTndbBUjJlN0Lq4BNuOP0lpuGA9OUCA9bxRZrsehpmkiv8BcYdp91ON3XqJHWmVURGTw1d1W3LCr1k/1g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chroma-js/2.4.2/chroma.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/noisejs@2.1.0/index.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/simplex-noise@4.0.3/dist/cjs/simplex-noise.min.js"></script>
 <script type = "module">
     const app = new PIXI.Application();
     await app.init({width: 600,height: 600,backgroundColor:0});
@@ -27,7 +26,7 @@
     let Sparking_time = 0;
     const fade_time = 2;
     const fire_dencity = 0.05;
-    const fire_offset = 0;
+    const fire_offset = 50;
     let fire_scale = 1;
 
     console.log(chroma.temperature(9000).get("rgb"));
@@ -52,7 +51,7 @@
     let fire_positions = [];
     for(let i = 0; i < Math.round(app.screen.width*fire_dencity); i++){
         fire_graphics.push(new PIXI.Graphics());
-        const fire_x = app.screen.width*Math.random();
+        const fire_x = app.screen.width*i/Math.round(app.screen.width*fire_dencity)+noise.perlin2(50*i,1);
         const fire_y = rnorm(250,5000);
         fire_positions.push([[fire_x,app.screen.height+fire_offset],[[240*(Math.round(Math.random())-0.5),0.3+0.5*fire_y*Math.random()],[0,fire_y]],0.5*(Math.random()-0.5)]);
     }
@@ -62,17 +61,18 @@
     function fire_depict(fire_gfs,fire_pos,scale,t){
         fire_gfs.forEach(function(fire_seg,i){
             fire_seg.clear();
-            const fire_color = chroma.temperature(9*fire_pos[i][1][1][1])
-            fire_seg.poly(calc_fire_pos(fire_pos[i],fire_pos[i][2]+0.1*noise.perlin3(50*fire_pos[i][1][1][0],fire_pos[i][1][1][1]*scale,t/50),scale,t)).fill(math.divide(fire_color.rgb(),255).concat(1-fire_color.get("hsl.l")));
+            const fire_color = chroma.temperature(9*fire_pos[i][1][1][1]);
+            fire_seg.poly(calc_fire_pos(fire_pos[i],(fire_pos[i][2]+0.1*noise.perlin3(50*fire_pos[i][1][1][0],fire_pos[i][1][1][1]*scale,t/50))/scale,scale,t)).fill(math.divide(fire_color.rgb(),255).concat(1-fire_color.get("hsl.l")));
             app.stage.addChild(fire_seg);
         });   
     }
 
     function calc_fire_pos(pos,theta,scale,t){
         const v_o = pos[0];
-        let M_raw = pos[1];
-        M_raw[1][1] *= scale;
-        const M = math.transpose(M_raw);
+        let M_raw = [[pos[1][0][0]*scale**0.1,pos[1][0][1]*scale**0.5],[pos[1][1][0],pos[1][1][1]*scale]];
+        //M_raw[0][0] += 5*noise.perlin3(1*pos[1][0][0],scale*pos[1][0][1],t/1000);
+        const M_noise = [[5*noise.perlin3(1*pos[1][0][0],scale*pos[1][0][1],t/1000),5*noise.perlin3(1*pos[1][0][0],scale*pos[1][0][1],t/1000)],[5*noise.perlin3(1*pos[1][1][0],scale*pos[1][1][1],t/1000),5*noise.perlin3(1*pos[1][1][0],scale*pos[1][1][1],t/1000)]]
+        const M = math.transpose(math.add(M_raw,M_noise));
         const M_r = [[Math.cos(theta),-1*Math.sin(theta)],[Math.sin(theta),Math.cos(theta)]];
         const v_out = math.subtract(v_o,math.transpose(math.multiply(M_r,M)));
         return(v_o.concat(v_out.flat(Infinity)));
@@ -153,7 +153,9 @@
         app.stage.addChild(spark_L);
     }
 
+    let add_scale = 1;
     let fire_time = 0;
+    let down_fire = false;
     app.ticker.add((time)=>
     {
         /*for (let fire_seg of fire_segs){
@@ -180,16 +182,23 @@
         if(isSparked){
             spark_depict(Sparking_time);
             Sparking_time += time.deltaTime*0.3;
+            add_scale += 0.1*time.deltaTime;
             if(Sparking_time >= fade_time){
                 spark_depict(0);
                 Sparking_time = 0;
                 isSparked = false;
+                down_fire = true;
             }
-            fire_scale += 0.0001*time.deltaTime;
-            console.log("sparking")
+        }
+        if(down_fire){
+            add_scale -= 0.3*time.deltaTime;
+            if(add_scale <= 1){
+                add_scale = 1;
+                down_fire = false;
+            }
         }
 
-        fire_depict(fire_graphics,fire_positions,fire_scale,fire_time);
+        fire_depict(fire_graphics,fire_positions,fire_scale*add_scale,fire_time);
         fire_time += time.deltaTime;
     });
     
