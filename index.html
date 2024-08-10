@@ -5,6 +5,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/13.0.3/math.js" integrity="sha512-lAVGwhTndbBUjJlN0Lq4BNuOP0lpuGA9OUCA9bxRZrsehpmkiv8BcYdp91ON3XqJHWmVURGTw1d1W3LCr1k/1g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chroma-js/2.4.2/chroma.min.js"></script>
 <script src='http://joeiddon.github.io/perlin/perlin.js'></script>
+<script src="https://cdn.jsdelivr.net/npm/simplex-noise@4.0.3/dist/cjs/simplex-noise.min.js"></script>
 <script type = "module">
     const app = new PIXI.Application();
     await app.init({width: 600,height: 600,backgroundColor:0});
@@ -14,9 +15,12 @@
         let height = window.innerHeight;
         app.renderer.resize(width,height)
     }
-    console.log(perlin.get(1,1));
+
     window.addEventListener("load",screenResize);
     window.addEventListener("resize",screenResize);
+    
+    const noise2D = createNoise2D();
+    console.log(noise2D(1,2));
 
     let isHovered = false;
     let isClicked = false;
@@ -60,7 +64,7 @@
         fire_gfs.forEach(function(fire_seg,i){
             fire_seg.clear();
             const fire_color = chroma.temperature(9*fire_pos[i][1][1][1])
-            fire_seg.poly(calc_fire_pos(fire_pos[i],fire_pos[i][2]+perlin.get(fire_pos[i][1][1][0],t),scale,t)).fill(math.divide(fire_color.rgb(),255).concat(1-fire_color.get("hsl.l")));
+            fire_seg.poly(calc_fire_pos(fire_pos[i],fire_pos[i][2]+noise2D(fire_pos[i][1][1][0],t),scale,t)).fill(math.divide(fire_color.rgb(),255).concat(1-fire_color.get("hsl.l")));
             app.stage.addChild(fire_seg);
         });   
     }
