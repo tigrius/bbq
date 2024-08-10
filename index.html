@@ -27,7 +27,7 @@
     const fade_time = 2;
     const fire_dencity = 0.05;
     const fire_offset = 50;
-    let fire_scale = 1;
+    let fire_scale =1;
 
     console.log(chroma.temperature(9000).get("rgb"));
     
@@ -56,13 +56,19 @@
         fire_positions.push([[fire_x,app.screen.height+fire_offset],[[240*(Math.round(Math.random())-0.5),0.3+0.5*fire_y*Math.random()],[0,fire_y]],0.5*(Math.random()-0.5)]);
     }
 
+
+    const fire_filter = new PIXI.BlurFilter();
+    fire_filter.blur = 5;
     fire_depict(fire_graphics,fire_positions,fire_scale,0);
+
+    
 
     function fire_depict(fire_gfs,fire_pos,scale,t){
         fire_gfs.forEach(function(fire_seg,i){
             fire_seg.clear();
             const fire_color = chroma.temperature(9*fire_pos[i][1][1][1]);
             fire_seg.poly(calc_fire_pos(fire_pos[i],(fire_pos[i][2]+0.1*noise.perlin3(50*fire_pos[i][1][1][0],fire_pos[i][1][1][1]*scale,t/50))/scale,scale,t)).fill(math.divide(fire_color.rgb(),255).concat(1-fire_color.get("hsl.l")));
+            fire_seg.filters = [fire_filter];
             app.stage.addChild(fire_seg);
         });   
     }
