@@ -23,7 +23,7 @@
     let isSparked = false;
     let Sparking_time = 0;
     const fade_time = 2;
-    const fire_dencity = 0.05;
+    const fire_dencity = 0.01;
     const fire_offset = 0;
     const particle_speed = 1;
     let fire_scale =1;
@@ -91,7 +91,7 @@
         fire_gfs.forEach(function(fire_seg,i){
             fire_seg.clear();
             const fire_color = chroma.temperature(9*fire_pos[i][1][1][1]);
-            fire_seg.poly(calc_fire_pos(fire_pos[i],(fire_pos[i][2]+0.1*noise.perlin3(50*fire_pos[i][1][1][0],fire_pos[i][1][1][1]*scale,t/50))/scale,scale,t)).fill(math.divide(fire_color.rgb(),255).concat(1-fire_color.get("hsl.l")));
+            fire_seg.poly(calc_fire_pos(fire_pos[i],(fire_pos[i][2]-0.05*noise.perlin3(50*fire_pos[i][1][1][0],fire_pos[i][1][1][1]*scale,t/50))/scale,scale,t)).fill(math.divide(fire_color.rgb(),255).concat(1-fire_color.get("hsl.l")));
             fire_seg.filters = [fire_filter];
             app.stage.addChild(fire_seg);
         });   
@@ -101,7 +101,7 @@
         const v_o = pos[0];
         let M_raw = [[pos[1][0][0]*scale**0.1,pos[1][0][1]*scale**0.5],[pos[1][1][0],pos[1][1][1]*scale]];
         //M_raw[0][0] += 5*noise.perlin3(1*pos[1][0][0],scale*pos[1][0][1],t/1000);
-        const M_noise = [[5*noise.perlin3(1*pos[1][0][0],scale*pos[1][0][1],t/1000),5*noise.perlin3(1*pos[1][0][0],scale*pos[1][0][1],t/1000)],[5*noise.perlin3(1*pos[1][1][0],scale*pos[1][1][1],t/1000),5*noise.perlin3(1*pos[1][1][0],scale*pos[1][1][1],t/1000)]]
+        const M_noise = [[10*noise.perlin3(10*pos[1][0][0],scale*pos[1][0][1],t/50),10*noise.perlin3(10*pos[1][0][0],scale*pos[1][0][1],t/50)],[10*noise.perlin3(10*pos[1][1][0],scale*pos[1][1][1],t/50),10*noise.perlin3(10*pos[1][1][0],scale*pos[1][1][1],t/50)]]
         const M = math.transpose(math.add(M_raw,M_noise));
         const M_r = [[Math.cos(theta),-1*Math.sin(theta)],[Math.sin(theta),Math.cos(theta)]];
         const v_out = math.subtract(v_o,math.transpose(math.multiply(M_r,M)));
@@ -231,10 +231,11 @@
 
         
         particles.forEach(function(particle_data,i){
-            particle_data[0].clear();
-            particle_data[0].circle(particle_data[1][0]+10*noise.perlin3(particle_data[1][0]/100,particle_data[1][1]/100,fire_time/500)*time.deltaTime,particle_data[1][1],particle_data[2]).fill(math.divide(particle_data[3].rgb(),255).concat(1-particle_data[3].get("hsl.l")));
-            particle_data[0].filters = [fire_filter];
-            app.stage.addChild(particle_data[0]);
+            //particle_data[0].clear();
+            //particle_data[0].circle(particle_data[1][0]+10*noise.perlin3(particle_data[1][0]/100,particle_data[1][1]/100,fire_time/500)*time.deltaTime,particle_data[1][1],particle_data[2]).fill(math.divide(particle_data[3].rgb(),255).concat(1-particle_data[3].get("hsl.l")));
+            //particle_data[0].filters = [fire_filter];
+            //app.stage.addChild(particle_data[0]);
+            particle_data[0].position.set(particle_data[1][0]+10*noise.perlin3(particle_data[1][0]/100,particle_data[1][1]/100,fire_time/500)*time.deltaTime,particle_data[1][1]);
             particle_data[1][1] -= particle_speed*time.deltaTime;
             if(particle_data[1][1]<0){
                 particle_data[0].destroy();
@@ -242,7 +243,8 @@
             }
         });
         if(Math.random()>0.9){
-            particles.push([new PIXI.Graphics,[Math.random()*app.screen.width,app.screen.height],3*Math.random()+2,chroma.temperature(1000+2000*Math.random())]);
+            add_circle(particles);
+            //console.log(particles.length);
         }
 
         fire_depict(fire_graphics,fire_positions,fire_scale*add_scale,fire_time);
@@ -258,6 +260,15 @@
         }else{
             return(c*Math.cos(Math.PI*2*b)*Math.sqrt(s)+m);
         }
+    }
+
+    function add_circle(circles){
+        const circle = new PIXI.Graphics;
+        const color = chroma.temperature(1000+2000*Math.random());
+        circle.circle(0,0,3*Math.random()+2).fill(math.divide(color.rgb(),255).concat(1-color.get("hsl.l")));
+        circle.filters = [fire_filter];
+        app.stage.addChild(circle);
+        circles.push([circle,[Math.random()*app.screen.width,app.screen.height]]);
     }
     
 
