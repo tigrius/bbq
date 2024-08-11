@@ -71,7 +71,7 @@
     
 
     function setFire(){
-        fire_graphics.forEach(function(fire_seg){fire_seg.clear();})
+        fire_graphics.forEach(function(fire_seg){fire_seg.destroy();})
         fire_graphics = [];
         fire_positions = [];
         for(let i = 0; i < Math.round(app.screen.width*fire_dencity); i++){
@@ -237,7 +237,7 @@
             app.stage.addChild(particle_data[0]);
             particle_data[1][1] -= particle_speed*time.deltaTime;
             if(particle_data[1][1]<0){
-                particle_data[0].clear();
+                particle_data[0].destroy();
                 particles.splice(i,1);
             }
         });
