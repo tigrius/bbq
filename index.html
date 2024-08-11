@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <meta charset="UTF-8" />
+<title>1.00.00</title>
 <div id = "app"></div>
 <script src="https://pixijs.download/release/pixi.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/13.0.3/math.js" integrity="sha512-lAVGwhTndbBUjJlN0Lq4BNuOP0lpuGA9OUCA9bxRZrsehpmkiv8BcYdp91ON3XqJHWmVURGTw1d1W3LCr1k/1g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
@@ -73,7 +74,9 @@
         app.stage.addChild(flingSprite_R);
     }
     
-    fetch(data_url,{method: "GET"}).then(function(data){console.log(data)});
+    fetchData(data_url,{method: "GET"},);
+    fetchData(data_url,{method:"POST",body: JSON.stringify({value:1})});
+    
     function setFire(){
         fire_graphics.forEach(function(fire_seg){fire_seg.destroy();})
         fire_graphics = [];
@@ -189,6 +192,7 @@
     let add_scale = 1;
     let fire_time = 0;
     let down_fire = false;
+    let click_num_temp = 0;
     app.ticker.add((time)=>
     {
         /*for (let fire_seg of fire_segs){
@@ -221,6 +225,9 @@
                 Sparking_time = 0;
                 isSparked = false;
                 down_fire = true;
+                click_num_temp += 1;
+                fetchData(data_url,{method:"POST",body: JSON.stringify({value:click_num_temp})});
+                click_num_temp = 0;
             }
         }
         if(down_fire){
@@ -279,6 +286,7 @@
         try {
             const response = await fetch(url, options);
             const data = await response.json();
+            console.log(data);
         } catch (error) {
         console.error("Error:", error);
     }
