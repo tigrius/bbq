@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <meta charset="UTF-8" />
-<title>1.01.00</title>
+<title>1.02.00</title>
 <div id = "app"></div>
 <script src="https://pixijs.download/release/pixi.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/13.0.3/math.js" integrity="sha512-lAVGwhTndbBUjJlN0Lq4BNuOP0lpuGA9OUCA9bxRZrsehpmkiv8BcYdp91ON3XqJHWmVURGTw1d1W3LCr1k/1g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
@@ -8,9 +8,9 @@
 <script src="https://cdn.jsdelivr.net/npm/noisejs@2.1.0/index.min.js"></script>
 <script type = "module">
     const data_url = "https://script.google.com/macros/s/AKfycby58JoUBJtxn2AY0wecsxiryWR0gwkhLWzD7dVbCLnMbApqohJpWU5cZrEr0bUBo5lu/exec";
-
-    const p_particles = {r_min:2,r_max:5,density:0.0001,speed:1,};
-    const flags = {hover:false,click:false,spark:false,};
+    let isHovered = false;
+    let isClicked = false;
+    let isSparked = false;
 
     let fire_graphics = [];
     let fire_positions = [];
@@ -121,9 +121,9 @@
     click_area.rect(-150,-170,260,190).fill({r:0,g:0,b:0,a:0});
     
 
-    click_area.on('pointerdown',(event)=>{flags.hover = true;});
-    click_area.on('pointerup',(event)=>{flags.click = true;});
-    click_area.on('pointerupoutside',(event)=>{flags.click = true;});
+    click_area.on('pointerdown',(event)=>{isHovered = true;});
+    click_area.on('pointerup',(event)=>{isClicked = true;});
+    click_area.on('pointerupoutside',(event)=>{isClicked = true;});
     click_area.eventMode = 'static';
     click_area.cursor = 'pointer';
     app.stage.addChild(click_area);
@@ -198,30 +198,30 @@
         }*/
         
 
-        if (flags.hover & !flags.click & flingSprite_R.rotation < 3.14/6){
+        if (isHovered & !isClicked & flingSprite_R.rotation < 3.14/6){
             flingSprite_L.rotation -= 0.2 * time.deltaTime;
             flingSprite_R.rotation += 0.2 * time.deltaTime;
         }
-        if (flags.click){
+        if (isClicked){
             flingSprite_L.rotation += 0.5 * time.deltaTime;
             flingSprite_R.rotation -= 0.5 * time.deltaTime;
             
             if(flingSprite_R.rotation <= 0){
                 flingSprite_L.rotation =0;
                 flingSprite_R.rotation =0;
-                flags.click = false;
-                flags.hover = false;
-                flags.spark = true;
+                isClicked = false;
+                isHovered = false;
+                isSparked = true;
             }
         }
-        if(flags.spark){
+        if(isSparked){
             spark_depict(Sparking_time);
             Sparking_time += time.deltaTime*0.3;
             add_scale += 0.1*time.deltaTime;
             if(Sparking_time >= fade_time){
                 spark_depict(0);
                 Sparking_time = 0;
-                flags.spark = false;
+                isSparked = false;
                 down_fire = true;
                 click_num_temp += 1;
                 fetchData(data_url,{method:"POST",body: JSON.stringify({value:click_num_temp})});
@@ -240,12 +240,8 @@
 
         
         particles.forEach(function(particle_data,i){
-            //particle_data[0].clear();
-            //particle_data[0].circle(particle_data[1][0]+10*noise.perlin3(particle_data[1][0]/100,particle_data[1][1]/100,fire_time/500)*time.deltaTime,particle_data[1][1],particle_data[2]).fill(math.divide(particle_data[3].rgb(),255).concat(1-particle_data[3].get("hsl.l")));
-            //particle_data[0].filters = [fire_filter];
-            //app.stage.addChild(particle_data[0]);
             particle_data[0].position.set(Math.abs((particle_data[1][0]+10*noise.perlin3(particle_data[1][0]/100,particle_data[1][1]/100,fire_time/500)*time.deltaTime)%app.screen.width),Math.abs(app.screen.height-particle_data[1][1]%app.screen.height));
-            particle_data[1][1] += p_particles.speed*time.deltaTime;
+            particle_data[1][1] += time.deltaTime;
         });
         
 
@@ -270,15 +266,6 @@
         }
     }
 
-    function add_circle(circles){
-        const circle = new PIXI.Graphics;
-        const color = chroma.temperature(1000+2000*Math.random());
-        circle.circle(0,0,(p_particles.r_max-p_particles.r_min)*Math.random()+p_particles.r_min).fill(math.divide(color.rgb(),255).concat(1-color.get("hsl.l")));
-        circle.filters = [fire_filter];
-        app.stage.addChild(circle);
-        circles.push([circle,[Math.random()*app.screen.width,Math.random()*app.screen.height]]);
-    }
-
     function set_particle(){
         particles.forEach(function(particle_data,i){
             particle_data[0].clear();
@@ -286,10 +273,10 @@
             particles.splice(i,1);
         });
 
-        for(let i=0;i<Math.round(p_particles.density*app.screen.height*app.screen.width);i++){
+        for(let i=0;i<Math.round(app.screen.height*app.screen.width/10000);i++){
         const circle = new PIXI.Graphics;
         const color = chroma.temperature(1000+2000*Math.random());
-        circle.circle(0,0,(p_particles.r_max-p_particles.r_min)*Math.random()+p_particles.r_min).fill(math.divide(color.rgb(),255).concat(1-color.get("hsl.l")));
+        circle.circle(0,0,3*Math.random()+2).fill(math.divide(color.rgb(),255).concat(1-color.get("hsl.l")));
         circle.filters = [fire_filter];
         app.stage.addChild(circle);
         particles.push([circle,[Math.random()*app.screen.width,Math.random()*app.screen.height]]);
