@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <meta charset="UTF-8" />
-<title>1.03.00</title>
+<title>1.03.01</title>
 <div id = "app"></div>
 <script src="https://pixijs.download/release/pixi.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/13.0.3/math.js" integrity="sha512-lAVGwhTndbBUjJlN0Lq4BNuOP0lpuGA9OUCA9bxRZrsehpmkiv8BcYdp91ON3XqJHWmVURGTw1d1W3LCr1k/1g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
@@ -98,7 +98,7 @@
         fire_gfs.forEach(function(fire_seg,i){
             fire_seg.clear();
             const fire_color = chroma.temperature(9*fire_pos[i][1][1][1]);
-            fire_seg.poly(calc_fire_pos(fire_pos[i],(fire_pos[i][2]-0.05*noise.perlin3(50*fire_pos[i][1][1][0],fire_pos[i][1][1][1]*scale,t/50))/scale,scale,t)).fill(math.divide(fire_color.rgb(),255).concat(1-fire_color.get("hsl.l")));
+            fire_seg.poly(calc_fire_pos(fire_pos[i],(fire_pos[i][2]-0.05*noise.perlin3(50*fire_pos[i][1][1][0],fire_pos[i][1][1][1]*scale,t/50))/scale,scale,t)).fill(math.divide(fire_color.rgb(),255).concat((1-fire_color.get("hsl.l"))**1.5));
             fire_seg.filters = [fire_filter];
             app.stage.addChild(fire_seg);
         });   
@@ -106,7 +106,7 @@
 
     function calc_fire_pos(pos,theta,scale,t){
         const v_o = pos[0];
-        let M_raw = [[pos[1][0][0]*scale**0.1,pos[1][0][1]*scale**0.5],[pos[1][1][0],pos[1][1][1]*scale]];
+        let M_raw = [[pos[1][0][0]*scale**0.4,pos[1][0][1]*scale**0.5],[pos[1][1][0],pos[1][1][1]*scale]];
         //M_raw[0][0] += 5*noise.perlin3(1*pos[1][0][0],scale*pos[1][0][1],t/1000);
         const M_noise = [[10*noise.perlin3(10*pos[1][0][0],scale*pos[1][0][1],t/50),10*noise.perlin3(10*pos[1][0][0],scale*pos[1][0][1],t/50)],[10*noise.perlin3(10*pos[1][1][0],scale*pos[1][1][1],t/50),10*noise.perlin3(10*pos[1][1][0],scale*pos[1][1][1],t/50)]]
         const M = math.transpose(math.add(M_raw,M_noise));
@@ -191,7 +191,7 @@
 
     
 
-    let add_scale = 1;
+    let add_scale = 0;
     let fire_time = 0;
     let interval_time = 0;
     let down_fire = false;
@@ -235,8 +235,8 @@
         }
         if(down_fire){
             add_scale -= 0.3*time.deltaTime;
-            if(add_scale <= 1){
-                add_scale = 1;
+            if(add_scale <= 0){
+                add_scale = 0;
                 down_fire = false;
             }
         }
@@ -246,7 +246,7 @@
             particle_data[1][1] += time.deltaTime;
         });
         
-        fire_depict(fire_graphics,fire_positions,fire_scale*add_scale,fire_time);
+        fire_depict(fire_graphics,fire_positions,fire_scale+add_scale**0.5,fire_time);
         fire_time += time.deltaTime;
         interval_time += time.deltaTime;
         if(interval_time >= 60){
@@ -296,7 +296,7 @@
             const response = await fetch(url, options);
             const data = await response.json();
             //console.log(data);
-            fire_scale = Math.log10(data.value+1)**0.5; 
+            fire_scale = 1.5*Math.log10(data.value+1); 
         } catch (error) {
         console.error("Error:", error);
     }
