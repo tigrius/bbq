@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <meta charset="UTF-8" />
-<title>1.02.01</title>
+<title>1.02.02</title>
 <div id = "app"></div>
 <script src="https://pixijs.download/release/pixi.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/13.0.3/math.js" integrity="sha512-lAVGwhTndbBUjJlN0Lq4BNuOP0lpuGA9OUCA9bxRZrsehpmkiv8BcYdp91ON3XqJHWmVURGTw1d1W3LCr1k/1g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
@@ -192,6 +192,7 @@
 
     let add_scale = 1;
     let fire_time = 0;
+    let interval_time = 0;
     let down_fire = false;
     let click_num_temp = 0;
     app.ticker.add((time)=>
@@ -240,12 +241,18 @@
         }
         
         particles.forEach(function(particle_data,i){
-            particle_data[0].position.set(Math.abs((particle_data[1][0]+10*noise.perlin3(particle_data[1][0]/100,particle_data[1][1]/100,fire_time/500)*time.deltaTime)%app_width),Math.abs(app_height-particle_data[1][1]%app_height));
+            particle_data[0].position.set(Math.abs((particle_data[1][0]+5*Math.cos(fire_time/100+i)*time.deltaTime)%app_width),Math.abs(app_height-particle_data[1][1]%app_height));
             particle_data[1][1] += time.deltaTime;
         });
         
         fire_depict(fire_graphics,fire_positions,fire_scale*add_scale,fire_time);
         fire_time += time.deltaTime;
+        interval_time += time.deltaTime;
+        if(interval_time >= 60){
+            console.log(60/time.deltaTime);
+            interval_time = 0;
+        }
+        
     });
     
     function screenResize(){
@@ -272,10 +279,10 @@
             particles.splice(i,1);
         });
 
-        for(let i=0;i<Math.round(app_height*app_width/10000);i++){
+        for(let i=0;i<Math.round(app_height*app_width/50000);i++){
         const circle = new PIXI.Graphics;
         const color = chroma.temperature(1000+2000*Math.random());
-        circle.circle(0,0,3*Math.random()+2).fill(math.divide(color.rgb(),255).concat(1-color.get("hsl.l")));
+        circle.circle(0,0,3*Math.random()+2).fill(math.divide(color.rgb(),255).concat(Math.sqrt(1-color.get("hsl.l"))));
         circle.filters = [fire_filter];
         app.stage.addChild(circle);
         particles.push([circle,[Math.random()*app_width,Math.random()*app_height]]);
