@@ -9,42 +9,37 @@
 <script type = "module">
     const data_url = "https://script.google.com/macros/s/AKfycby58JoUBJtxn2AY0wecsxiryWR0gwkhLWzD7dVbCLnMbApqohJpWU5cZrEr0bUBo5lu/exec";
 
-    
+    const p_particles = {r_min:2,r_max:5,density:0.0001,speed:1,};
+    const flags = {hover:false,click:false,spark:false,};
 
     let fire_graphics = [];
     let fire_positions = [];
     let particles = [];
     await PIXI.Assets.load('src/fling_L.png');
     await PIXI.Assets.load('src/fling_R.png');
-    let flingSprite_L = PIXI.Sprite.from('src/fling_L.png');
-    flingSprite_L.anchor.set(0.9,1);
-    let flingSprite_R = PIXI.Sprite.from('src/fling_R.png');
-    flingSprite_R.anchor.set(0.1,1);
+    
 
     const noise = new Noise(1);
 
-    let isHovered = false;
-    let isClicked = false;
-    let isSparked = false;
     let Sparking_time = 0;
     const fade_time = 2;
     const fire_dencity = 0.036;
     const fire_offset = 0;
-    const particle_speed = 1;
     let fire_scale =1;
     const click_area = new PIXI.Graphics();
     let spark_origin = [];
+    let flingSprite_L = PIXI.Sprite.from('src/fling_L.png');
+    let flingSprite_R = PIXI.Sprite.from('src/fling_R.png');
+
+    const fire_filter = new PIXI.BlurFilter();
+    fire_filter.blur = 5;
 
     const app = new PIXI.Application();
     await app.init({width: 600,height: 600,backgroundColor:0});
     document.getElementById('app').appendChild(app.canvas);
 
 
-    function screenResize(){
-        let width = window.innerWidth;
-        let height = window.innerHeight;
-        app.renderer.resize(width,height);
-    }
+    
     if (document.readyState ==="complete"){
         initiation();
     }else{
@@ -57,16 +52,18 @@
     function initiation(){
         screenResize();
         setFire();
+        set_particle();
         flings_depict();
         setClickArea();
         spark_origin = [app.screen.width / 2  -48,app.screen.height / 2 -280];
     }
 
     function flings_depict(){
+        flingSprite_L.anchor.set(0.9,1);
+        flingSprite_R.anchor.set(0.1,1);
         flingSprite_L.x = app.screen.width / 2;
         flingSprite_L.y = app.screen.height / 2;
         flingSprite_L.scale = 0.5;
-        
         flingSprite_R.x = app.screen.width / 2;
         flingSprite_R.y = app.screen.height / 2;
         flingSprite_R.scale = 0.5;
@@ -89,8 +86,7 @@
         }
     }
 
-    const fire_filter = new PIXI.BlurFilter();
-    fire_filter.blur = 5;
+    
 
     
 
@@ -125,9 +121,9 @@
     click_area.rect(-150,-170,260,190).fill({r:0,g:0,b:0,a:0});
     
 
-    click_area.on('pointerdown',(event)=>{isHovered = true;});
-    click_area.on('pointerup',(event)=>{isClicked = true;});
-    click_area.on('pointerupoutside',(event)=>{isClicked = true;});
+    click_area.on('pointerdown',(event)=>{flags.hover = true;});
+    click_area.on('pointerup',(event)=>{flags.click = true;});
+    click_area.on('pointerupoutside',(event)=>{flags.click = true;});
     click_area.eventMode = 'static';
     click_area.cursor = 'pointer';
     app.stage.addChild(click_area);
@@ -189,6 +185,8 @@
         app.stage.addChild(spark_L);
     }
 
+    
+
     let add_scale = 1;
     let fire_time = 0;
     let down_fire = false;
@@ -200,30 +198,30 @@
         }*/
         
 
-        if (isHovered & !isClicked & flingSprite_R.rotation < 3.14/6){
+        if (flags.hover & !flags.click & flingSprite_R.rotation < 3.14/6){
             flingSprite_L.rotation -= 0.2 * time.deltaTime;
             flingSprite_R.rotation += 0.2 * time.deltaTime;
         }
-        if (isClicked){
+        if (flags.click){
             flingSprite_L.rotation += 0.5 * time.deltaTime;
             flingSprite_R.rotation -= 0.5 * time.deltaTime;
             
             if(flingSprite_R.rotation <= 0){
                 flingSprite_L.rotation =0;
                 flingSprite_R.rotation =0;
-                isClicked = false;
-                isHovered = false;
-                isSparked = true;
+                flags.click = false;
+                flags.hover = false;
+                flags.spark = true;
             }
         }
-        if(isSparked){
+        if(flags.spark){
             spark_depict(Sparking_time);
             Sparking_time += time.deltaTime*0.3;
             add_scale += 0.1*time.deltaTime;
             if(Sparking_time >= fade_time){
                 spark_depict(0);
                 Sparking_time = 0;
-                isSparked = false;
+                flags.spark = false;
                 down_fire = true;
                 click_num_temp += 1;
                 fetchData(data_url,{method:"POST",body: JSON.stringify({value:click_num_temp})});
@@ -246,22 +244,21 @@
             //particle_data[0].circle(particle_data[1][0]+10*noise.perlin3(particle_data[1][0]/100,particle_data[1][1]/100,fire_time/500)*time.deltaTime,particle_data[1][1],particle_data[2]).fill(math.divide(particle_data[3].rgb(),255).concat(1-particle_data[3].get("hsl.l")));
             //particle_data[0].filters = [fire_filter];
             //app.stage.addChild(particle_data[0]);
-            particle_data[0].position.set(particle_data[1][0]+10*noise.perlin3(particle_data[1][0]/100,particle_data[1][1]/100,fire_time/500)*time.deltaTime,particle_data[1][1]);
-            particle_data[1][1] -= particle_speed*time.deltaTime;
-            if(particle_data[1][1]<0){
-                particle_data[0].destroy();
-                particles.splice(i,1);
-            }
+            particle_data[0].position.set(Math.abs((particle_data[1][0]+10*noise.perlin3(particle_data[1][0]/100,particle_data[1][1]/100,fire_time/500)*time.deltaTime)%app.screen.width),Math.abs(app.screen.height-particle_data[1][1]%app.screen.height));
+            particle_data[1][1] += p_particles.speed*time.deltaTime;
         });
-        if(Math.random()>0.9){
-            add_circle(particles);
-            //console.log(particles.length);
-        }
+        
 
         fire_depict(fire_graphics,fire_positions,fire_scale*add_scale,fire_time);
         fire_time += time.deltaTime;
     });
     
+    function screenResize(){
+        let width = window.innerWidth;
+        let height = window.innerHeight;
+        app.renderer.resize(width,height);
+    }
+
     function rnorm(m,s){
         let a = 1-Math.random();
         let b = 1-Math.random();
@@ -276,10 +273,27 @@
     function add_circle(circles){
         const circle = new PIXI.Graphics;
         const color = chroma.temperature(1000+2000*Math.random());
-        circle.circle(0,0,3*Math.random()+2).fill(math.divide(color.rgb(),255).concat(1-color.get("hsl.l")));
+        circle.circle(0,0,(p_particles.r_max-p_particles.r_min)*Math.random()+p_particles.r_min).fill(math.divide(color.rgb(),255).concat(1-color.get("hsl.l")));
         circle.filters = [fire_filter];
         app.stage.addChild(circle);
-        circles.push([circle,[Math.random()*app.screen.width,app.screen.height]]);
+        circles.push([circle,[Math.random()*app.screen.width,Math.random()*app.screen.height]]);
+    }
+
+    function set_particle(){
+        particles.forEach(function(particle_data,i){
+            particle_data[0].clear();
+            particle_data[0].destroy();
+            particles.splice(i,1);
+        });
+
+        for(let i=0;i<Math.round(p_particles.density*app.screen.height*app.screen.width);i++){
+        const circle = new PIXI.Graphics;
+        const color = chroma.temperature(1000+2000*Math.random());
+        circle.circle(0,0,(p_particles.r_max-p_particles.r_min)*Math.random()+p_particles.r_min).fill(math.divide(color.rgb(),255).concat(1-color.get("hsl.l")));
+        circle.filters = [fire_filter];
+        app.stage.addChild(circle);
+        particles.push([circle,[Math.random()*app.screen.width,Math.random()*app.screen.height]]);
+    }
     }
 
     async function fetchData(url, options) {
