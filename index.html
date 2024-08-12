@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <meta charset="UTF-8" />
-<title>1.02.02</title>
+<title>1.03.00</title>
 <div id = "app"></div>
 <script src="https://pixijs.download/release/pixi.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/13.0.3/math.js" integrity="sha512-lAVGwhTndbBUjJlN0Lq4BNuOP0lpuGA9OUCA9bxRZrsehpmkiv8BcYdp91ON3XqJHWmVURGTw1d1W3LCr1k/1g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
@@ -55,6 +55,7 @@
         screenResize();
         app_height = app.screen.height;
         app_width = app.screen.width;
+        fetchData(data_url,{method: "GET"},);
         setFire();
         set_particle();
         flings_depict();
@@ -75,7 +76,7 @@
         app.stage.addChild(flingSprite_R);
     }
     
-    fetchData(data_url,{method: "GET"},);
+    
     
     function setFire(){
         fire_graphics.forEach(function(fire_seg){fire_seg.destroy();})
@@ -251,6 +252,7 @@
         if(interval_time >= 60){
             console.log(60/time.deltaTime);
             interval_time = 0;
+            fetchData(data_url,{method: "GET"},);
         }
         
     });
@@ -293,7 +295,8 @@
         try {
             const response = await fetch(url, options);
             const data = await response.json();
-            console.log(data);
+            //console.log(data);
+            fire_scale = Math.log10(data.value+1)**0.5; 
         } catch (error) {
         console.error("Error:", error);
     }
