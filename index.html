@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <meta charset="UTF-8" />
-<title>1.02.00</title>
+<title>1.02.01</title>
 <div id = "app"></div>
 <script src="https://pixijs.download/release/pixi.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/13.0.3/math.js" integrity="sha512-lAVGwhTndbBUjJlN0Lq4BNuOP0lpuGA9OUCA9bxRZrsehpmkiv8BcYdp91ON3XqJHWmVURGTw1d1W3LCr1k/1g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
@@ -20,6 +20,8 @@
     
 
     const noise = new Noise(1);
+    let app_width = 0;
+    let app_height = 0;
 
     let Sparking_time = 0;
     const fade_time = 2;
@@ -51,38 +53,39 @@
 
     function initiation(){
         screenResize();
+        app_height = app.screen.height;
+        app_width = app.screen.width;
         setFire();
         set_particle();
         flings_depict();
         setClickArea();
-        spark_origin = [app.screen.width / 2  -48,app.screen.height / 2 -280];
+        spark_origin = [app_width / 2  -48,app_height / 2 -280];
     }
 
     function flings_depict(){
         flingSprite_L.anchor.set(0.9,1);
         flingSprite_R.anchor.set(0.1,1);
-        flingSprite_L.x = app.screen.width / 2;
-        flingSprite_L.y = app.screen.height / 2;
+        flingSprite_L.x = app_width / 2;
+        flingSprite_L.y = app_height / 2;
         flingSprite_L.scale = 0.5;
-        flingSprite_R.x = app.screen.width / 2;
-        flingSprite_R.y = app.screen.height / 2;
+        flingSprite_R.x = app_width / 2;
+        flingSprite_R.y = app_height / 2;
         flingSprite_R.scale = 0.5;
         app.stage.addChild(flingSprite_L);
         app.stage.addChild(flingSprite_R);
     }
     
     fetchData(data_url,{method: "GET"},);
-    fetchData(data_url,{method:"POST",body: JSON.stringify({value:1})});
     
     function setFire(){
         fire_graphics.forEach(function(fire_seg){fire_seg.destroy();})
         fire_graphics = [];
         fire_positions = [];
-        for(let i = 0; i < Math.round(app.screen.width*fire_dencity); i++){
+        for(let i = 0; i < Math.round(app_width*fire_dencity); i++){
             fire_graphics.push(new PIXI.Graphics());
-            const fire_x = app.screen.width*i/Math.round(app.screen.width*fire_dencity)+noise.perlin2(50*i,1);
+            const fire_x = app_width*i/Math.round(app_width*fire_dencity)+noise.perlin2(50*i,1);
             const fire_y = rnorm(250,5000);
-            fire_positions.push([[fire_x,app.screen.height+fire_offset],[[240*(Math.round(Math.random())-0.5),0.3+0.5*fire_y*Math.random()],[0,fire_y]],0.5*(Math.random()-0.5)]);
+            fire_positions.push([[fire_x,app_height+fire_offset],[[240*(Math.round(Math.random())-0.5),0.3+0.5*fire_y*Math.random()],[0,fire_y]],0.5*(Math.random()-0.5)]);
         }
     }
 
@@ -114,8 +117,8 @@
 
 
     function setClickArea(){
-        click_area.x = app.screen.width / 2;
-        click_area.y = app.screen.height / 2;
+        click_area.x = app_width / 2;
+        click_area.y = app_height / 2;
     }
    
     click_area.rect(-150,-170,260,190).fill({r:0,g:0,b:0,a:0});
@@ -235,16 +238,12 @@
                 down_fire = false;
             }
         }
-
-        
-
         
         particles.forEach(function(particle_data,i){
-            particle_data[0].position.set(Math.abs((particle_data[1][0]+10*noise.perlin3(particle_data[1][0]/100,particle_data[1][1]/100,fire_time/500)*time.deltaTime)%app.screen.width),Math.abs(app.screen.height-particle_data[1][1]%app.screen.height));
+            particle_data[0].position.set(Math.abs((particle_data[1][0]+10*noise.perlin3(particle_data[1][0]/100,particle_data[1][1]/100,fire_time/500)*time.deltaTime)%app_width),Math.abs(app_height-particle_data[1][1]%app_height));
             particle_data[1][1] += time.deltaTime;
         });
         
-
         fire_depict(fire_graphics,fire_positions,fire_scale*add_scale,fire_time);
         fire_time += time.deltaTime;
     });
@@ -273,13 +272,13 @@
             particles.splice(i,1);
         });
 
-        for(let i=0;i<Math.round(app.screen.height*app.screen.width/10000);i++){
+        for(let i=0;i<Math.round(app_height*app_width/10000);i++){
         const circle = new PIXI.Graphics;
         const color = chroma.temperature(1000+2000*Math.random());
         circle.circle(0,0,3*Math.random()+2).fill(math.divide(color.rgb(),255).concat(1-color.get("hsl.l")));
         circle.filters = [fire_filter];
         app.stage.addChild(circle);
-        particles.push([circle,[Math.random()*app.screen.width,Math.random()*app.screen.height]]);
+        particles.push([circle,[Math.random()*app_width,Math.random()*app_height]]);
     }
     }
 
