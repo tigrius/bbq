@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <head Access-Control-Allow-Origin: *>
     <meta charset="UTF-8" />
-    <title>2.02.00</title>
+    <title>2.02.01</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@200..700&display=swap" rel="stylesheet">
@@ -75,6 +75,8 @@
     const flings = new PIXI.Container();
     const fires = new PIXI.Container();
     const addfires = new PIXI.Container();
+    const particles1 = new PIXI.Container();
+    const particles2 = new PIXI.Container();
     flings.scale = 2;
     flings.zIndex = 1000;
     fires.zIndex = 1;
@@ -83,6 +85,8 @@
     app.stage.addChild(addfires);
     app.stage.addChild(flings);
     app.stage.addChild(fires);
+    app.stage.addChild(particles1);
+    app.stage.addChild(particles2);
     
 
 
@@ -100,7 +104,8 @@
         screenResize();
         app_height = app.screen.height;
         app_width = app.screen.width;
-        flings.position.set(app_width/2,app_height/2)
+        flings.position.set(app_width/2,app_height/2);
+        particles2.y = app_height;
         fetchData(data_url,{method: "GET"},);
         setFire();
         set_particle();
@@ -284,6 +289,7 @@
                 for(let i =0;i < 0.3*Math.round(app_width*fire_dencity);i++){
                     const add_gf = new PIXI.Graphics();
                     add_gf.zIndex = -1;
+                    add_gf.filters = [fire_filter];
                     fire_add_gfs.push(add_gf);
                     const fire_x = app_width*i/Math.round(0.3*app_width*fire_dencity)+noise.perlin2(50*i,1);
                     const fire_y = rnorm(300,5000);
@@ -311,10 +317,16 @@
             down_fire = false;
         }
         
-        particles.forEach(function(particle_data,i){
-            particle_data[0].position.set(Math.abs((particle_data[1][0]+5*Math.cos(fire_time/100+i)*time.deltaTime)%app_width),Math.abs(app_height-particle_data[1][1]%app_height));
-            particle_data[1][1] += time.deltaTime;
-        });
+        particles1.y -= time.deltaTime;
+        particles2.y -= time.deltaTime;
+
+        if(particles1.y <= -app_height){
+            particles1.y = app_height;
+        }
+        if(particles2.y <= -app_height){
+            particles2.y = app_height;
+        }
+
         add_fire_depict(fire_add_gfs,fire_add_pos,fire_scale,fire_time);
         fire_depict(fire_graphics,fire_positions,fire_scale,fire_time);
         
@@ -349,18 +361,20 @@
     }
 
     function set_particle(){
-        particles.forEach(function(particle_data,i){
-            particle_data[0].destroy();
-        });
-        particles.splice(0);
         for(let i=0;i<Math.round(app_height*app_width/50000);i++){
-        const circle = new PIXI.Graphics;
+        const circle1 = new PIXI.Graphics;
         const color = chroma.temperature(1000+2000*Math.random());
-        circle.circle(0,0,3*Math.random()+2).fill(math.divide(color.rgb(),255).concat(Math.sqrt(1-color.get("hsl.l"))));
-        circle.filters = [fire_filter];
-        app.stage.addChild(circle);
-        particles.push([circle,[Math.random()*app_width,Math.random()*app_height]]);
-    }
+        circle1.circle(Math.random()*app_width,Math.random()*app_height,0.003*app_width*(1*Math.random()+2)).fill(math.divide(color.rgb(),255).concat(1));
+        //circle1.filters = [fire_filter];
+        particles1.addChild(circle1);
+        }
+        for(let i=0;i<Math.round(app_height*app_width/50000);i++){
+        const circle2 = new PIXI.Graphics;
+        const color = chroma.temperature(1000+2000*Math.random());
+        circle2.circle(Math.random()*app_width,Math.random()*app_height,0.003*app_width*(1*Math.random()+2)).fill(math.divide(color.rgb(),255).concat(1));
+        //circle2.filters = [fire_filter];
+        particles2.addChild(circle2);
+        }
     }
 
     async function fetchData(url, options) {
