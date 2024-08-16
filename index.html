@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <head Access-Control-Allow-Origin: *>
     <meta charset="UTF-8" />
-    <title>2.00.00</title>
+    <title>2.00.01</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@200..700&display=swap" rel="stylesheet">
@@ -33,7 +33,8 @@
     const fade_time = 2;
     const fire_dencity = 0.036;
     const fire_offset = 0;
-    let fire_scale =1;
+    let fire_scale =0;
+    let target_fire_scale = 0;
     const click_area = new PIXI.Graphics();
     let spark_origin = [];
     let flingSprite_L = PIXI.Sprite.from('src/fling_L.png');
@@ -104,17 +105,17 @@
         fire_gfs.forEach(function(fire_seg,i){
             fire_seg.clear();
             const fire_color = chroma.temperature(9*fire_pos[i][1][1][1]);
-            fire_seg.poly(calc_fire_pos(fire_pos[i],(fire_pos[i][2]-0.05*noise.perlin3(50*fire_pos[i][1][1][0],fire_pos[i][1][1][1]*scale,t/50))/scale,scale,t)).fill(math.divide(fire_color.rgb(),255).concat((1-fire_color.get("hsl.l"))**1.5));
+            fire_seg.poly(calc_fire_pos(fire_pos[i],(fire_pos[i][2]-0.05*noise.perlin2(i,5-t/50))/scale,scale,t,i)).fill(math.divide(fire_color.rgb(),255).concat((1-fire_color.get("hsl.l"))**1.5));
             fire_seg.filters = [fire_filter];
             app.stage.addChild(fire_seg);
         });   
     }
 
-    function calc_fire_pos(pos,theta,scale,t){
+    function calc_fire_pos(pos,theta,scale,t,i){
         const v_o = pos[0];
         let M_raw = [[pos[1][0][0]*scale**0.4,pos[1][0][1]*scale**0.5],[pos[1][1][0],pos[1][1][1]*scale]];
         //M_raw[0][0] += 5*noise.perlin3(1*pos[1][0][0],scale*pos[1][0][1],t/1000);
-        const M_noise = [[10*noise.perlin3(10*pos[1][0][0],scale*pos[1][0][1],t/50),10*noise.perlin3(10*pos[1][0][0],scale*pos[1][0][1],t/50)],[10*noise.perlin3(10*pos[1][1][0],scale*pos[1][1][1],t/50),10*noise.perlin3(10*pos[1][1][0],scale*pos[1][1][1],t/50)]]
+        const M_noise = [[10*noise.perlin2(i,t/50),10*noise.perlin2(i,5+t/50)],[10*noise.perlin2(i,10+t/50),10*noise.perlin2(i,20+t/50)]]
         const M = math.transpose(math.add(M_raw,M_noise));
         const M_r = [[Math.cos(theta),-1*Math.sin(theta)],[Math.sin(theta),Math.cos(theta)]];
         const v_out = math.subtract(v_o,math.transpose(math.multiply(M_r,M)));
@@ -260,7 +261,7 @@
             interval_time = 0;
             fetchData(data_url,{method: "GET",},);
         }
-        
+        fire_scale += time.deltaTime*(target_fire_scale-fire_scale)/50
     });
     
     function screenResize(){
@@ -302,11 +303,13 @@
             const response = await fetch(url, options);
             const data = await response.json();
             //console.log(data);
-            fire_scale = 1.5*Math.log10(data.value+1); 
+            target_fire_scale = 1.5*Math.log10(data.value+1); 
             text_area.innerText = data.value;
         } catch (error) {
         console.error("Error:", error);
     }
+
+    
 }
 
     
