@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <head Access-Control-Allow-Origin: *>
     <meta charset="UTF-8" />
-    <title>2.00.01</title>
+    <title>2.01.00</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@200..700&display=swap" rel="stylesheet">
@@ -21,6 +21,7 @@
     let fire_graphics = [];
     let fire_positions = [];
     let particles = [];
+    let clicked_num = 0;
     await PIXI.Assets.load('src/fling_L.png');
     await PIXI.Assets.load('src/fling_R.png');
     
@@ -105,7 +106,7 @@
         fire_gfs.forEach(function(fire_seg,i){
             fire_seg.clear();
             const fire_color = chroma.temperature(9*fire_pos[i][1][1][1]);
-            fire_seg.poly(calc_fire_pos(fire_pos[i],(fire_pos[i][2]-0.05*noise.perlin2(i,5-t/50))/scale,scale,t,i)).fill(math.divide(fire_color.rgb(),255).concat((1-fire_color.get("hsl.l"))**1.5));
+            fire_seg.poly(calc_fire_pos(fire_pos[i],(fire_pos[i][2]+0.05*noise.perlin2(i,5-t/50))/scale,scale,t,i)).fill(math.divide(fire_color.rgb(),255).concat((1-fire_color.get("hsl.l"))**1.5));
             fire_seg.filters = [fire_filter];
             app.stage.addChild(fire_seg);
         });   
@@ -115,7 +116,7 @@
         const v_o = pos[0];
         let M_raw = [[pos[1][0][0]*scale**0.4,pos[1][0][1]*scale**0.5],[pos[1][1][0],pos[1][1][1]*scale]];
         //M_raw[0][0] += 5*noise.perlin3(1*pos[1][0][0],scale*pos[1][0][1],t/1000);
-        const M_noise = [[10*noise.perlin2(i,t/50),10*noise.perlin2(i,5+t/50)],[10*noise.perlin2(i,10+t/50),10*noise.perlin2(i,20+t/50)]]
+        const M_noise = [[10*noise.perlin2(i,t/50),10*noise.perlin2(i,5+t/50)],[10*noise.perlin2(i,10+t/50),20*noise.perlin2(i,20+t/50)*scale*Math.cos(i+t/10)]]
         const M = math.transpose(math.add(M_raw,M_noise));
         const M_r = [[Math.cos(theta),-1*Math.sin(theta)],[Math.sin(theta),Math.cos(theta)]];
         const v_out = math.subtract(v_o,math.transpose(math.multiply(M_r,M)));
@@ -236,8 +237,9 @@
                 isSparked = false;
                 down_fire = true;
                 click_num_temp += 1;
-                fetchData(data_url,{method:"POST",body: JSON.stringify({value:click_num_temp})});
-                click_num_temp = 0;
+                clicked_num += 1;
+                text_area.innerText = clicked_num;
+                target_fire_scale = 1.5*Math.log10(clicked_num+1); 
             }
         }
         if(down_fire){
@@ -257,9 +259,12 @@
         fire_time += time.deltaTime;
         interval_time += time.deltaTime;
         if(interval_time >= 60){
-            console.log(60/time.deltaTime);
+            //console.log(60/time.deltaTime);
             interval_time = 0;
+            fetchData(data_url,{method:"POST",body: JSON.stringify({value:click_num_temp})});
             fetchData(data_url,{method: "GET",},);
+            text_area.innerText = clicked_num;
+            target_fire_scale = 1.5*Math.log10(clicked_num+1); 
         }
         fire_scale += time.deltaTime*(target_fire_scale-fire_scale)/50
     });
@@ -299,12 +304,15 @@
     }
 
     async function fetchData(url, options) {
+        if(options["method"] == "POST"){
+            console.log("fired");
+            click_num_temp = 0;
+        }
         try {
             const response = await fetch(url, options);
             const data = await response.json();
             //console.log(data);
-            target_fire_scale = 1.5*Math.log10(data.value+1); 
-            text_area.innerText = data.value;
+            clicked_num = Math.max(clicked_num,data.value);
         } catch (error) {
         console.error("Error:", error);
     }
