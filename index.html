@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <head Access-Control-Allow-Origin: *>
     <meta charset="UTF-8" />
-    <title>2.03.00</title>
+    <title>2.04.00</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@200..700&display=swap" rel="stylesheet">
@@ -83,6 +83,8 @@
     const addfires = new PIXI.Container();
     const particles1 = new PIXI.Container();
     const particles2 = new PIXI.Container();
+    const circle_effect = new PIXI.Graphics();
+    
     flings.scale = 2;
     flings.zIndex = 1000;
     fires.zIndex = 1;
@@ -93,6 +95,7 @@
     app.stage.addChild(fires);
     app.stage.addChild(particles1);
     app.stage.addChild(particles2);
+    fires.addChild(circle_effect);
     
 
 
@@ -120,6 +123,7 @@
         app_width = app.screen.width;
         flings.position.set(app_width/2,app_height/2);
         particles2.y = app_height;
+        circle_effect.position.set(app_width/2,app_height);
         fetchData(data_url,{method: "GET"},);
         setFire();
         set_particle();
@@ -266,6 +270,12 @@
     let fire_add_gfs = [];
     let fire_add_pos = [];
     let fire_add_h = [];
+    const q_effect = 1000000;
+    function diagonal(){
+        return Math.sqrt(app_height**2+app_width**2);
+    }
+    const max_radius_fac = 2;
+    const v_r = 0.04;
     app.ticker.add((time)=>
     {
         if (isHovered & !isClicked & flingSprite_R.rotation < 3.14/6){
@@ -299,7 +309,7 @@
             }
         }
         if(add_fire){
-            if(add_fire_time == 0){
+            /*if(add_fire_time == 0){
                 for(let i =0;i < 0.3*Math.round(app_width*fire_dencity);i++){
                     const add_gf = new PIXI.Graphics();
                     add_gf.zIndex = -1;
@@ -310,17 +320,27 @@
                     fire_add_pos.push([[fire_x,app_height+fire_offset],[[240*(Math.round(Math.random())-0.5),0.3+0.5*fire_y*Math.random()],[0,fire_y]],0.5*(Math.random()-0.5)]);
                     fire_add_h.push(fire_y);
                 }
-            }
+            }*/
+            circle_effect.clear();
+            circle_effect.circle(0,0,max_radius_fac*diagonal()*add_fire_time*v_r).fill([1,0,0.1,q_effect/(0.01+max_radius_fac*diagonal()*add_fire_time*v_r)**2]);
             add_fire_time += time.deltaTime;
-            fire_add_pos.forEach(function(po,i){
+            /*fire_add_pos.forEach(function(po,i){
                 po[1][1][1] = 4*fire_add_h[i]*add_fire_time*(1-add_fire_time/adding_time)/adding_time;
                 //console.log(po[1][1][1])
-            });
-            if(add_fire_time > adding_time){
-                down_fire = true;  
+            });*/
+            /*if(add_fire_time > adding_time){
+                //down_fire = true;
+                add_fire = false;
+                add_fire_time=0;  
+            }*/
+            if(q_effect/(0.01+max_radius_fac*diagonal()*add_fire_time*v_r)**2 < 1/256){
+                circle_effect.clear();
+                add_fire = false;
+                add_fire_time=0;
+                console.log("effect ended"); 
             }
         }
-        if(down_fire){
+        /*if(down_fire){
             fire_add_gfs.forEach(function(add_gf,i){
                 add_gf.destroy();  
             });
@@ -329,7 +349,7 @@
             add_fire = false;
             add_fire_time = 0;
             down_fire = false;
-        }
+        }*/
         
         particles1.y -= time.deltaTime;
         particles2.y -= time.deltaTime;
@@ -479,14 +499,14 @@
         top: 0%;
         height: auto;
         width: auto;
-        font-size: 5vmin;
+        font-size: 9vmin;
         font-family: "Oswald", sans-serif;
         font-optical-sizing: auto;
         font-weight: 500;
         font-style: normal;
         text-align: center;
-        padding-right: 3vmin;
-        padding-top: 1vmin;
+        padding-right: 4vmin;
+        padding-top: 2vmin;
         display: none;
     }
 </style>
