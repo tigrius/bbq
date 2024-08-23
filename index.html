@@ -370,7 +370,7 @@
         if(interval_time >= 60){
             //console.log(60/time.deltaTime);
             interval_time = 0;
-            fetchData(data_url,{method:"POST",body: JSON.stringify({value:click_num_temp})});
+            fetchData(data_url,{method:"POST",body:JSON.stringify({value:click_num_temp})});
             fetchData(data_url,{method: "GET",},);
             text_area.innerText = clicked_num;
             target_fire_scale = 1.5*Math.log10(clicked_num+1); 
